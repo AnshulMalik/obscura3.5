@@ -1,0 +1,33 @@
+{
+  "name": "spring-data-rest-and-reactjs",
+  "version": "0.1.0",
+  "description": "Demo of ReactJS + Spring Data REST",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:gregturn/reactjs-and-spring-data-rest.git"
+  },
+  "keywords": [
+    "rest",
+    "hateoas",
+    "spring",
+    "data",
+    "react"
+  ],
+  "author": "Greg L. Turnquist",
+  "license": "ASLv2",
+  "bugs": {
+    "url": "https://github.com/gregturn/reactjs-and-spring-data-rest/issues"
+  },
+  "homepage": "https://github.com/gregturn/reactjs-and-spring-data-rest",
+  "dependencies": {
+    "react-dom": "^15.3.0",
+    "react-tools": "^0.13.3",
+    "requirejs-babel": "0.0.9",
+    "sockjs-client": "^1.1.1",
+    "stompjs": "^2.3.3"
+  },
+  "devDependencies": {
+    "babel-preset-es2015": "^6.13.2",
+    "bower": "^1.3.12"
+  }
+}
