@@ -10,6 +10,8 @@ import org.hibernate.validator.constraints.Email;
 import java.util.Date;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.obscuraconflu.api.dto.SignUpRequest;
+import com.obscuraconflu.api.dto.SocialLoginRequest;
 
 @Table(name = "user")
 @Entity
@@ -26,9 +28,13 @@ public class ObUser {
 
 	private String phone;
 
-	private int level;
+	private Long level; 
+	
+	private Long parentLevel;
 
 	private String password;
+	
+	private String token;
 
 	private @JsonIgnore String accessToken;
 
@@ -44,13 +50,50 @@ public class ObUser {
 		
 	}
 
-	public ObUser(String firstName, String lastName, String email, int level, String signupType) {
+	public ObUser(String firstName, String lastName, String email, String phone, Long level, Long parentLevel, String password, String token, String accessToken, String signupType, String uid) {
 		this.firstName = firstName;
 		this.lastName = lastName;
 		this.email = email;
+		this.phone = phone;
 		this.level = level;
+		this.parentLevel = parentLevel;
+		this.password = password;
+		this.token = token;
+		this.accessToken = accessToken;
 		this.signupType = signupType;
+		this.uid = uid;
 	}
+	
+	public ObUser(SignUpRequest signupRequest, String token) {
+		this.firstName = signupRequest.getFirstName();
+		this.lastName = signupRequest.getLastName();
+		this.email = signupRequest.getEmail();
+		this.phone = signupRequest.getPhone();
+		this.level = 0L;
+		this.parentLevel = 0L;
+		this.password = signupRequest.getPassword();
+		this.token = token;
+		this.accessToken = signupRequest.getAccessToken();
+		this.signupType = signupRequest.getSignupType();
+		this.uid = signupRequest.getUid();
+		
+	}
+	
+	public ObUser(SocialLoginRequest request, String token) {
+		this.firstName = request.getName();
+		this.email = request.getEmail();
+		this.level = 0L;
+		this.parentLevel = 0L;
+		this.token = token;
+		this.accessToken = request.getAccessToken();
+		if(request.getType() == 0)
+			this.signupType = "FACEBOOK";
+		else 
+			this.signupType = "GOOGLE";
+		this.uid = request.getUid();
+		
+	}
+
 
 	public Long getId() {
 		return id;
@@ -84,11 +127,11 @@ public class ObUser {
 		this.email = email;
 	}
 
-	public int getLevel() {
+	public Long getLevel() {
 		return level;
 	}
 
-	public void setLevel(int level) {
+	public void setLevel(Long level) {
 		this.level = level;
 	}
 
@@ -146,5 +189,21 @@ public class ObUser {
 
 	public void setUid(String uid) {
 		this.uid = uid;
+	}
+
+	public String getToken() {
+		return token;
+	}
+
+	public void setToken(String token) {
+		this.token = token;
+	}
+
+	public Long getParentLevel() {
+		return parentLevel;
+	}
+
+	public void setParentLevel(Long parentLevel) {
+		this.parentLevel = parentLevel;
 	}
 }

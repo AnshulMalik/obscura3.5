@@ -1,24 +1,220 @@
 package com.obscuraconflu.api.controllers;
 
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.obscuraconflu.api.dto.Response;
-import com.obscuraconflu.api.models.ObUser;
-import com.obscuraconflu.api.services.UserService;
+import org.springframework.messaging.handler.annotation.MessageMapping;
+import org.springframework.messaging.handler.annotation.SendTo;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 
+import com.obscuraconflu.api.dto.LevelResponse;
+import com.obscuraconflu.api.dto.LoginRequestForm;
+import com.obscuraconflu.api.dto.LoginResponse;
+import com.obscuraconflu.api.dto.Response;
+import com.obscuraconflu.api.dto.SignUpRequest;
+import com.obscuraconflu.api.dto.SocialLoginRequest;
+import com.obscuraconflu.api.dto.SubmitAnswerRequest;
+import com.obscuraconflu.api.models.Level;
+import com.obscuraconflu.api.models.Notification;
+import com.obscuraconflu.api.models.ObUser;
+import com.obscuraconflu.api.services.HttpService;
+import com.obscuraconflu.api.services.LevelService;
+import com.obscuraconflu.api.services.UserService;
+import com.obscuraconflu.api.constant.ErrorConstants;
 
 @RestController
 public class UserController {
-	
+
+	private static final Logger LOG = LoggerFactory.getLogger(UserController.class);
+
 	@Autowired
 	UserService userService;
 	
+	@Autowired
+	HttpService httpService;
+	
+	@Autowired
+	LevelService levelService;
+	
+	private SimpMessagingTemplate template;
+	
+	@Autowired
+	public UserController(SimpMessagingTemplate temp) {
+		this.template = temp;
+	}
+
 	@RequestMapping(method = RequestMethod.GET, value = "/v1/users", produces = "application/json")
 	public Response getUsers() {
 		ObUser u = userService.findById(3L);
 		return new Response(200, u.getEmail());
+	}
+	
+	// Route for form login
+	@RequestMapping(method = RequestMethod.POST, value = "/v1/flogin", produces = "application/json")
+	public Response flogin(@RequestBody LoginRequestForm loginRequestForm) {
+		if (loginRequestForm == null || loginRequestForm.getEmail().length() == 0
+				|| loginRequestForm.getPassword().length() == 0) {
+			return ErrorConstants.INVALID_REQUEST;
+		}
+		ObUser user = userService.findByEmail(loginRequestForm.getEmail());
+		if (user == null || !user.getPassword().equals(loginRequestForm.getPassword())) {
+			return ErrorConstants.INVALID_EMAIL_OR_PASSWORD;
+		} 
+		else if(!user.getSignupType().equals("FORM")) {
+			// Third party user can't login with password
+			return ErrorConstants.LOGIN_WITH_SOCIAL_ACCOUNT;
+		}
+		else {
+			return new LoginResponse(user);
+		}
+	}
+	
+	@RequestMapping(method = RequestMethod.POST, value = "/v1/socialLogin", produces = "application/json")
+	public Response socialLogin(@RequestBody SocialLoginRequest socialLoginRequest) {
+		if(socialLoginRequest == null)
+			return ErrorConstants.INVALID_REQUEST;
+		
+		if(socialLoginRequest.getAccessToken().length() == 0 || 
+				socialLoginRequest.getEmail().length() == 0 ||
+				socialLoginRequest.getUid().length() == 0 ||
+				socialLoginRequest.getName().length() == 0 ||
+				socialLoginRequest.getType() > 1) 
+			return ErrorConstants.INVALID_REQUEST;
+		
+		int type = socialLoginRequest.getType();
+		String newEmail = "";
+		if(type == 0) {
+			// Facebook login
+			newEmail = getEmailFromFacebookToken(socialLoginRequest.getAccessToken());
+		}
+		else {
+			newEmail = getEmailFromGoogleToken(socialLoginRequest.getAccessToken());
+		}
+		if(newEmail.equals(socialLoginRequest.getEmail())) {
+			ObUser user = userService.findByEmail(newEmail);
+			if(user == null) {
+				return userService.signup(socialLoginRequest);
+			}
+			else {
+				return new LoginResponse(user);
+			}
+		}
+		return new Response();
+		
+	}
+	
+	@RequestMapping(method = RequestMethod.POST, value = "/v1/signup", produces = "application/json")
+	public Response signup(@RequestBody SignUpRequest signupRequest) {
+		if(signupRequest == null || signupRequest.getEmail() == null || 
+				signupRequest.getFirstName() == null || signupRequest.getPassword() == null || 
+				signupRequest.getSignupType() == null) {	
+			return ErrorConstants.INVALID_REQUEST;
+		}
+		switch(signupRequest.getSignupType()) {
+			case "GOOGLE" :
+				if(!getEmailFromGoogleToken(signupRequest.getAccessToken()).equals(signupRequest.getEmail())) {
+					return ErrorConstants.INVALID_TOKEN;
+				}
+				break;
+			case "FACEBOOK":
+				if(!getEmailFromFacebookToken(signupRequest.getAccessToken()).equals(signupRequest.getEmail())) {
+					return ErrorConstants.INVALID_TOKEN;
+				}
+				break;
+			case "FORM":
+				break;
+			default:
+				return ErrorConstants.INVALID_REQUEST;
+		}
+		return userService.signup(signupRequest);
+	}
+	
+	@RequestMapping(method = RequestMethod.POST, value = "/v1/submitAnswer", produces = "application/json")
+	public Response submitAnswer(@RequestBody SubmitAnswerRequest submitAnswerRequest) {
+		if(submitAnswerRequest == null) {
+			return ErrorConstants.INVALID_REQUEST;
+		}
+		
+		Long level = submitAnswerRequest.getLevel();
+		Long subLevel = submitAnswerRequest.getSubLevel();
+		String answer = levelService.getAnswer(level, subLevel);
+		
+		LOG.info("Sending answer: " + answer + " to /topic/greetings");
+		template.convertAndSend("/topic/greetings", answer);
+		
+		if(answer.equals(submitAnswerRequest.getAnswer())) {
+			ObUser user = userService.findByToken(submitAnswerRequest.getToken());
+			Level cur = levelService.getLevel(level, subLevel);
+			Level next = levelService.getLevelById(cur.getNextLevelId());
+			
+			if((user.getParentLevel() < next.getParentLevel()) || ((user.getParentLevel() == next.getParentLevel()) && (user.getLevel() < next.getLevel()))) {
+				userService.updateLevel(user, next.getParentLevel(), next.getLevel());
+			}
+			
+			return new LevelResponse(next);
+			
+		}
+		
+		return ErrorConstants.WRONG_ANSWER;
+		
+	}
+
+
+	private String getEmailFromGoogleToken(String token) {
+		Map<String, String> params = new HashMap<String, String>();
+		params.put("access_token", token);
+		try {
+			String googleResponse = httpService.get("https://www.googleapis.com/plus/v1/people/me?", params);
+
+			JSONObject gResp = new JSONObject(googleResponse);
+			JSONArray array = gResp.getJSONArray("emails");
+			
+			return array.getJSONObject(0).getString("value");
+			    
+
+		} catch (IOException e) {
+			LOG.info("Something went wrong with captcha verification");
+			e.printStackTrace();
+			
+		}
+
+		return null;
+	}
+	
+	private String getEmailFromFacebookToken(String token) {
+		Map<String, String> params = new HashMap<String, String>();
+		params.put("access_token", token);
+		params.put("fields", "email");
+		try {
+			String facebookResponse = httpService.get("https://graph.facebook.com/v2.7/me?", params);
+
+			JSONObject fResp = new JSONObject(facebookResponse);
+			if (fResp.get("email") == null) {
+				LOG.info("Invalid token");
+				return null;
+			} else {
+				LOG.info("Token is valid returning " + (String)fResp.get("email"));
+				
+				return (String)fResp.get("email");
+			}
+
+		} catch (IOException e) {
+			LOG.info("Something went wrong with captcha verification");
+			e.printStackTrace();
+			
+		}
+
+		return null;
 	}
 }

@@ -59,6 +59,13 @@ define(function (require) {
 		render: function () {
 			return (
 				<div>
+					<GoogleLogin
+						clientId={'679139204576-u8o5pmk50lqbdhk75kf67t8uoa44f2ne.apps.googleusercontent.com'}
+					    callback={responseGoogle}
+					    offline={false}
+					>
+						<span> Login with Google</span>
+					</GoogleLogin>
 					<CreateDialog attributes={this.state.attributes} onCreate={this.onCreate}/>
 					<UserList users={this.state.users}
 								  links={this.state.links}
