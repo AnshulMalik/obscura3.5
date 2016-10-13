@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.servlet.http.HttpServletRequest;
+
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -53,15 +55,9 @@ public class UserController {
 	public UserController(SimpMessagingTemplate temp) {
 		this.template = temp;
 	}
-
-	@RequestMapping(method = RequestMethod.GET, value = "/v1/users", produces = "application/json")
-	public Response getUsers() {
-		ObUser u = userService.findById(3L);
-		return new Response(200, u.getEmail());
-	}
 	
 	// Route for form login
-	@RequestMapping(method = RequestMethod.POST, value = "/v1/flogin", produces = "application/json")
+	@RequestMapping(method = RequestMethod.POST, value = "/api/v1/flogin", produces = "application/json")
 	public Response flogin(@RequestBody LoginRequestForm loginRequestForm) {
 		if (loginRequestForm == null || loginRequestForm.getEmail().length() == 0
 				|| loginRequestForm.getPassword().length() == 0) {
@@ -69,6 +65,7 @@ public class UserController {
 		}
 		ObUser user = userService.findByEmail(loginRequestForm.getEmail());
 		if (user == null || !user.getPassword().equals(loginRequestForm.getPassword())) {
+			LOG.warn(user.getFirstName() + " invalid password attempt.");
 			return ErrorConstants.INVALID_EMAIL_OR_PASSWORD;
 		} 
 		else if(!user.getSignupType().equals("FORM")) {
@@ -76,11 +73,12 @@ public class UserController {
 			return ErrorConstants.LOGIN_WITH_SOCIAL_ACCOUNT;
 		}
 		else {
+
 			return new LoginResponse(user);
 		}
 	}
 	
-	@RequestMapping(method = RequestMethod.POST, value = "/v1/socialLogin", produces = "application/json")
+	@RequestMapping(method = RequestMethod.POST, value = "/api/v1/socialLogin", produces = "application/json")
 	public Response socialLogin(@RequestBody SocialLoginRequest socialLoginRequest) {
 		if(socialLoginRequest == null)
 			return ErrorConstants.INVALID_REQUEST;
@@ -104,9 +102,11 @@ public class UserController {
 		if(newEmail.equals(socialLoginRequest.getEmail())) {
 			ObUser user = userService.findByEmail(newEmail);
 			if(user == null) {
+				LOG.info(socialLoginRequest.getName() + " signed up with facebook/google");
 				return userService.signup(socialLoginRequest);
 			}
 			else {
+				LOG.info(user.getFirstName() + " logged in with facebook/google");
 				return new LoginResponse(user);
 			}
 		}
@@ -114,7 +114,7 @@ public class UserController {
 		
 	}
 	
-	@RequestMapping(method = RequestMethod.POST, value = "/v1/signup", produces = "application/json")
+	@RequestMapping(method = RequestMethod.POST, value = "/api/v1/signup", produces = "application/json")
 	public Response signup(@RequestBody SignUpRequest signupRequest) {
 		if(signupRequest == null || signupRequest.getEmail() == null || 
 				signupRequest.getFirstName() == null || signupRequest.getPassword() == null || 
@@ -124,11 +124,13 @@ public class UserController {
 		switch(signupRequest.getSignupType()) {
 			case "GOOGLE" :
 				if(!getEmailFromGoogleToken(signupRequest.getAccessToken()).equals(signupRequest.getEmail())) {
+					LOG.warn("Invalid google signup request from " + signupRequest.getEmail());
 					return ErrorConstants.INVALID_TOKEN;
 				}
 				break;
 			case "FACEBOOK":
 				if(!getEmailFromFacebookToken(signupRequest.getAccessToken()).equals(signupRequest.getEmail())) {
+					LOG.warn("Invalid face signup request from " + signupRequest.getEmail());
 					return ErrorConstants.INVALID_TOKEN;
 				}
 				break;
@@ -137,24 +139,39 @@ public class UserController {
 			default:
 				return ErrorConstants.INVALID_REQUEST;
 		}
+		LOG.info("Social signup request from " + signupRequest.getEmail());
 		return userService.signup(signupRequest);
 	}
 	
-	@RequestMapping(method = RequestMethod.POST, value = "/v1/submitAnswer", produces = "application/json")
-	public Response submitAnswer(@RequestBody SubmitAnswerRequest submitAnswerRequest) {
+	@RequestMapping(method = RequestMethod.POST, value = "/api/v1/submitAnswer", produces = "application/json")
+	public Response submitAnswer(@RequestBody SubmitAnswerRequest submitAnswerRequest, HttpServletRequest request) {
 		if(submitAnswerRequest == null) {
 			return ErrorConstants.INVALID_REQUEST;
 		}
+		LOG.info("Answer submit request from " + submitAnswerRequest.getToken() + "");
 		
+		return ErrorConstants.GAME_NOT_STARTED;
+		/*
 		Long level = submitAnswerRequest.getLevel();
 		Long subLevel = submitAnswerRequest.getSubLevel();
 		String answer = levelService.getAnswer(level, subLevel);
 		
-		LOG.info("Sending answer: " + answer + " to /topic/greetings");
-		template.convertAndSend("/topic/greetings", answer);
+//		LOG.info("Sending answer: " + answer + " to /topic/greetings");
+//		template.convertAndSend("/topic/greetings", answer);
+		int flag = 0;
 		
-		if(answer.equals(submitAnswerRequest.getAnswer())) {
+		LOG.info("Request ip: " + request.getRemoteAddr() + " answer: " + submitAnswerRequest.getAnswer());
+		if(level == 6) {
+			if(submitAnswerRequest.getAnswer().equals(request.getRemoteAddr()))
+				flag = 1;
+		}
+		else if(answer.equals(submitAnswerRequest.getAnswer()))
+			flag = 1;
+		
+		if(flag == 1) {
 			ObUser user = userService.findByToken(submitAnswerRequest.getToken());
+			
+			
 			Level cur = levelService.getLevel(level, subLevel);
 			Level next = levelService.getLevelById(cur.getNextLevelId());
 			
@@ -167,7 +184,7 @@ public class UserController {
 		}
 		
 		return ErrorConstants.WRONG_ANSWER;
-		
+		*/
 	}
 
 
@@ -175,7 +192,7 @@ public class UserController {
 		Map<String, String> params = new HashMap<String, String>();
 		params.put("access_token", token);
 		try {
-			String googleResponse = httpService.get("https://www.googleapis.com/plus/v1/people/me?", params);
+			String googleResponse = httpService.get("https://www.googleapis.com/plus/api/v1/people/me?", params);
 
 			JSONObject gResp = new JSONObject(googleResponse);
 			JSONArray array = gResp.getJSONArray("emails");

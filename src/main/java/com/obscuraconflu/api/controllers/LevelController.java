@@ -31,9 +31,9 @@ public class LevelController {
 	@Autowired
 	UserService userService;
 	
-	@RequestMapping(method = RequestMethod.GET, value = "/v1/level/{id}", produces = "application/json")
+	@RequestMapping(method = RequestMethod.GET, value = "/api/v1/level/{id}", produces = "application/json")
 	public Response getLevel(@PathVariable("id") Long id, @RequestHeader("authToken") String token) {
-		LOG.info("Request to fetch level");
+
 		ObUser user = userService.findByToken(token);
 		
 		if(user == null || (user.getParentLevel() < id)) {
@@ -42,6 +42,8 @@ public class LevelController {
 		Level level;
 		try {
 			level = levelService.getLevel(id, id);
+			
+			LOG.info("Request from " + user.getFirstName() + " to access level " + level.getLevel());
 		}
 		catch(Exception e) {
 			e.printStackTrace();
@@ -51,7 +53,7 @@ public class LevelController {
 		return new LevelResponse(level);
 	}
 	
-	@RequestMapping(method = RequestMethod.GET, value = "/v1/level/{plev}/{lev}", produces = "application/json")
+	@RequestMapping(method = RequestMethod.GET, value = "/api/v1/level/{plev}/{lev}", produces = "application/json")
 	public Response getLevel(@PathVariable("plev") String parentLev, @PathVariable("lev") String lev, @RequestHeader("authToken") String token) {
 		ObUser user = userService.findByToken(token);
 		Long parent, subLev;
@@ -66,11 +68,11 @@ public class LevelController {
 		if(user == null || (user.getParentLevel() < parent) || (user.getParentLevel() == parent && user.getLevel() < subLev)) {
 			return ErrorConstants.UNAUTHORIZED_USER;
 		}
-		LOG.info("Request to fetch level parent level: " + parentLev + " level : " + lev);
+		
 		Level level = null;
 		try {
-			
 			level = levelService.getLevel(Long.parseLong(parentLev), Long.parseLong(lev));
+			LOG.info("Request from " + user.getFirstName() + " to access level " + level.getLevel());
 		}
 		catch(Exception e) {
 			e.printStackTrace();

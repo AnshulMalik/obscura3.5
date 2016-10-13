@@ -32,4 +32,5 @@ public class ErrorConstants {
 	public static final Response WRONG_ANSWER = new Response(401, "Wrong answer");
 	public static final Response LOGIN_WITH_SOCIAL_ACCOUNT = new Response(510, "Please login with social account instead"); 
 	public static final Response INVALID_LEVEL = new Response(400, "Invalid level request");
+	public static final Response GAME_NOT_STARTED = new Response(403, "The game has not started yet");
 }
