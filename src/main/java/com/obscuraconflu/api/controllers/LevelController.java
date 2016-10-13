@@ -31,7 +31,7 @@ public class LevelController {
 	@Autowired
 	UserService userService;
 	
-	@RequestMapping(method = RequestMethod.GET, value = "/api/v1/level/{id}", produces = "application/json")
+	@RequestMapping(method = RequestMethod.GET, value = "/api/level/{id}", produces = "application/json")
 	public Response getLevel(@PathVariable("id") Long id, @RequestHeader("authToken") String token) {
 
 		ObUser user = userService.findByToken(token);
@@ -53,7 +53,7 @@ public class LevelController {
 		return new LevelResponse(level);
 	}
 	
-	@RequestMapping(method = RequestMethod.GET, value = "/api/v1/level/{plev}/{lev}", produces = "application/json")
+	@RequestMapping(method = RequestMethod.GET, value = "/api/level/{plev}/{lev}", produces = "application/json")
 	public Response getLevel(@PathVariable("plev") String parentLev, @PathVariable("lev") String lev, @RequestHeader("authToken") String token) {
 		ObUser user = userService.findByToken(token);
 		Long parent, subLev;

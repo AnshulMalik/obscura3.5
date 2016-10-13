@@ -19,7 +19,7 @@ public class NotificationController {
 	@Autowired
 	private NotificationService notificationService;
 	
-	@RequestMapping(method = RequestMethod.GET, value = "/api/v1/notification/{id}", produces = "application/json")
+	@RequestMapping(method = RequestMethod.GET, value = "/api/notification/{id}", produces = "application/json")
 	public Response getNotification() {
 		// TODO
 		// An after parameter, which will fetch notifications after certain time

@@ -57,7 +57,7 @@ public class UserController {
 	}
 	
 	// Route for form login
-	@RequestMapping(method = RequestMethod.POST, value = "/api/v1/flogin", produces = "application/json")
+	@RequestMapping(method = RequestMethod.POST, value = "/api/flogin", produces = "application/json")
 	public Response flogin(@RequestBody LoginRequestForm loginRequestForm) {
 		if (loginRequestForm == null || loginRequestForm.getEmail().length() == 0
 				|| loginRequestForm.getPassword().length() == 0) {
@@ -78,7 +78,7 @@ public class UserController {
 		}
 	}
 	
-	@RequestMapping(method = RequestMethod.POST, value = "/api/v1/socialLogin", produces = "application/json")
+	@RequestMapping(method = RequestMethod.POST, value = "/api/socialLogin", produces = "application/json")
 	public Response socialLogin(@RequestBody SocialLoginRequest socialLoginRequest) {
 		if(socialLoginRequest == null)
 			return ErrorConstants.INVALID_REQUEST;
@@ -114,7 +114,7 @@ public class UserController {
 		
 	}
 	
-	@RequestMapping(method = RequestMethod.POST, value = "/api/v1/signup", produces = "application/json")
+	@RequestMapping(method = RequestMethod.POST, value = "/api/signup", produces = "application/json")
 	public Response signup(@RequestBody SignUpRequest signupRequest) {
 		if(signupRequest == null || signupRequest.getEmail() == null || 
 				signupRequest.getFirstName() == null || signupRequest.getPassword() == null || 
@@ -143,7 +143,7 @@ public class UserController {
 		return userService.signup(signupRequest);
 	}
 	
-	@RequestMapping(method = RequestMethod.POST, value = "/api/v1/submitAnswer", produces = "application/json")
+	@RequestMapping(method = RequestMethod.POST, value = "/api/submitAnswer", produces = "application/json")
 	public Response submitAnswer(@RequestBody SubmitAnswerRequest submitAnswerRequest, HttpServletRequest request) {
 		if(submitAnswerRequest == null) {
 			return ErrorConstants.INVALID_REQUEST;
