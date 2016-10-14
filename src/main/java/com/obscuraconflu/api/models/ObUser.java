@@ -87,6 +87,7 @@ public class ObUser {
 		this.firstName = request.getName();
 		this.email = request.getEmail();
 		this.level = 0L;
+		this.levelUrl = "0"; 
 		this.parentLevel = 0L;
 		this.token = token;
 		this.accessToken = request.getAccessToken();

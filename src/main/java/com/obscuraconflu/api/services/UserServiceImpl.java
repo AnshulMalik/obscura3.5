@@ -52,7 +52,6 @@ public class UserServiceImpl implements UserService {
 			// TODO: Encrypt password before saving user
 			// signupRequest.setPassword(signupRequest.getPassword());
 			ObUser user = new ObUser(socialLoginRequest, generateLoginToken(socialLoginRequest.getEmail()));
-
 			userDao.save(user);
 
 			return new LoginResponse(user);
