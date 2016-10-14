@@ -1,6 +1,7 @@
 package com.obscuraconflu.api.controllers;
 
 import java.io.IOException;
+import java.math.BigInteger;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -27,6 +28,7 @@ import com.obscuraconflu.api.dto.Response;
 import com.obscuraconflu.api.dto.SignUpRequest;
 import com.obscuraconflu.api.dto.SocialLoginRequest;
 import com.obscuraconflu.api.dto.SubmitAnswerRequest;
+import com.obscuraconflu.api.dto.TestRequest;
 import com.obscuraconflu.api.models.Level;
 import com.obscuraconflu.api.models.Notification;
 import com.obscuraconflu.api.models.ObUser;
@@ -143,6 +145,15 @@ public class UserController {
 		return userService.signup(signupRequest);
 	}
 	
+	@RequestMapping(method = RequestMethod.GET, value = "/api/test", produces = "application/json")
+	public Response test() {
+		Response res = new Response();
+//		ObUser user = userService.findByToken(testRequest.getToken());
+		BigInteger rank= userService.getRank(new BigInteger("12"));
+		LOG.info("rank is " + rank);
+		return res;	
+	}
+	
 	@RequestMapping(method = RequestMethod.POST, value = "/api/submitAnswer", produces = "application/json")
 	public Response submitAnswer(@RequestBody SubmitAnswerRequest submitAnswerRequest, HttpServletRequest request) {
 		if(submitAnswerRequest == null) {
@@ -150,8 +161,6 @@ public class UserController {
 		}
 		LOG.info("Answer submit request from " + submitAnswerRequest.getToken() + "");
 		
-		return ErrorConstants.GAME_NOT_STARTED;
-		/*
 		Long level = submitAnswerRequest.getLevel();
 		Long subLevel = submitAnswerRequest.getSubLevel();
 		String answer = levelService.getAnswer(level, subLevel);
@@ -160,9 +169,9 @@ public class UserController {
 //		template.convertAndSend("/topic/greetings", answer);
 		int flag = 0;
 		
-		LOG.info("Request ip: " + request.getRemoteAddr() + " answer: " + submitAnswerRequest.getAnswer());
+		LOG.info("Request ip: " + request.getHeader("X-Forwarded-For") + " answer: " + submitAnswerRequest.getAnswer());
 		if(level == 6) {
-			if(submitAnswerRequest.getAnswer().equals(request.getRemoteAddr()))
+			if(submitAnswerRequest.getAnswer().equals(request.getHeader("X-Forwarded-For")))
 				flag = 1;
 		}
 		else if(answer.equals(submitAnswerRequest.getAnswer()))
@@ -170,8 +179,6 @@ public class UserController {
 		
 		if(flag == 1) {
 			ObUser user = userService.findByToken(submitAnswerRequest.getToken());
-			
-			
 			Level cur = levelService.getLevel(level, subLevel);
 			Level next = levelService.getLevelById(cur.getNextLevelId());
 			
@@ -184,7 +191,7 @@ public class UserController {
 		}
 		
 		return ErrorConstants.WRONG_ANSWER;
-		*/
+		
 	}
 
 

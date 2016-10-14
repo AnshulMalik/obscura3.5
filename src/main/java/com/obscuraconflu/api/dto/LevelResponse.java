@@ -13,6 +13,8 @@ public class LevelResponse extends Response{
 	
 	private String image;
 	
+	private String url;
+	
 	private String html;
 	
 	private String js;
@@ -25,6 +27,7 @@ public class LevelResponse extends Response{
 		this.plevel = level.getParentLevel();
 		this.html = level.getHtml();
 		this.image = level.getImage();
+		this.url = level.getUrl();
 		this.js = level.getJavascript();
 		this.hint = level.getHint();
 	}
@@ -50,6 +53,14 @@ public class LevelResponse extends Response{
 
 	public void setImage(String image) {
 		this.image = image;
+	}
+	
+	public String getUrl() {
+		return url;
+	}
+	
+	public void setUrl(String url) {
+		this.url = url;
 	}
 
 	public String getJs() {

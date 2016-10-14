@@ -21,6 +21,8 @@ public class Level {
 	
 	public String image;
 	
+	public String url;
+	
 	public String html;
 	
 	public String javascript;
@@ -33,12 +35,13 @@ public class Level {
 		
 	}
 	
-	public Level(Long level, String name, Long parentLevel, Long nextLevel, String image, String html, String js, String hint, String answer) {
+	public Level(Long level, String name, Long parentLevel, Long nextLevel, String image, String url, String html, String js, String hint, String answer) {
 		this.level = level;
 		this.name = name;
 		this.parentLevel = parentLevel;
 		this.nextLevelId = nextLevel;
 		this.image = image;
+		this.url = url;
 		this.html = html;
 		this.javascript = js;
 		this.hint = hint;
@@ -93,6 +96,13 @@ public class Level {
 		this.image = image;
 	}
 	
+	public String getUrl() {
+		return url;
+	}
+	
+	public void setUrl(String url) {
+		this.url = url;
+	}
 	public String getHtml() {
 		return html;
 	}

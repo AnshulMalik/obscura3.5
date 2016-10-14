@@ -1,5 +1,7 @@
 package com.obscuraconflu.api.services;
 
+import java.math.BigInteger;
+
 import com.obscuraconflu.api.dto.Response;
 import com.obscuraconflu.api.dto.SignUpRequest;
 import com.obscuraconflu.api.dto.SocialLoginRequest;
@@ -18,4 +20,6 @@ public interface UserService {
 	public Response signup(SocialLoginRequest socialLoginRequest);
 	
 	public boolean updateLevel(ObUser user, Long parentLevel, Long level);
+	
+	public BigInteger getRank(BigInteger id);
 }
