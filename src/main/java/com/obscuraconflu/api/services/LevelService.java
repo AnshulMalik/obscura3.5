@@ -8,6 +8,10 @@ public interface LevelService {
 	
 	public Level getLevelById(Long id);
 	
+	public Level getLevelByUrl(String url);
+	
+	public String getAnswerByUrl(String url);
+	
 	public String getAnswer(Long level, Long subLevel);
 
 	public String getAnswer(Long level);

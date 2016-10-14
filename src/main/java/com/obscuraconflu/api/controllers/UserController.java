@@ -159,35 +159,43 @@ public class UserController {
 		if(submitAnswerRequest == null) {
 			return ErrorConstants.INVALID_REQUEST;
 		}
-		LOG.info("Answer submit request from " + submitAnswerRequest.getToken() + "");
+		LOG.info("Answer submit request from " + submitAnswerRequest.getToken() + " " + submitAnswerRequest.getUrl());
 		
-		Long level = submitAnswerRequest.getLevel();
-		Long subLevel = submitAnswerRequest.getSubLevel();
-		String answer = levelService.getAnswer(level, subLevel);
+		String url = submitAnswerRequest.getUrl();
+		String answer = levelService.getAnswerByUrl(url);
+		String[] answers = answer.split("\\s+");
 		
 //		LOG.info("Sending answer: " + answer + " to /topic/greetings");
 //		template.convertAndSend("/topic/greetings", answer);
 		int flag = 0;
 		
-		LOG.info("Request ip: " + request.getHeader("X-Forwarded-For") + " answer: " + submitAnswerRequest.getAnswer());
-		if(level == 6) {
-			if(submitAnswerRequest.getAnswer().equals(request.getHeader("X-Forwarded-For")))
-				flag = 1;
-		}
-		else if(answer.equals(submitAnswerRequest.getAnswer()))
-			flag = 1;
-		
-		if(flag == 1) {
-			ObUser user = userService.findByToken(submitAnswerRequest.getToken());
-			Level cur = levelService.getLevel(level, subLevel);
-			Level next = levelService.getLevelById(cur.getNextLevelId());
+		LOG.info("Request ip: " + request.getRemoteAddr() + " forwarded for: " + request.getHeader("X-Forwarded-For") + " answer: " + submitAnswerRequest.getAnswer());
+		if(url.equals("6")) {
+			if(submitAnswerRequest.getAnswer().equals(request.getHeader("X-Forwarded-For")) || submitAnswerRequest.getAnswer().equals(request.getRemoteAddr())) {
+				ObUser user = userService.findByToken(submitAnswerRequest.getToken());
+				Level cur = levelService.getLevelByUrl(url);
+				Level next = levelService.getLevelById(cur.getNextLevelId());
+				
+				if((user.getParentLevel() < next.getParentLevel()) || ((user.getParentLevel() == next.getParentLevel()) && (user.getLevel() < next.getLevel()))) {
+					userService.updateLevel(user, next.getParentLevel(), next.getLevel(), next.getUrl());
+				}
 			
-			if((user.getParentLevel() < next.getParentLevel()) || ((user.getParentLevel() == next.getParentLevel()) && (user.getLevel() < next.getLevel()))) {
-				userService.updateLevel(user, next.getParentLevel(), next.getLevel());
+				return new LevelResponse(next);
 			}
 			
-			return new LevelResponse(next);
+		}
+		for(String answerFromArray: answers) {
+			if(answerFromArray.equals(submitAnswerRequest.getAnswer())) {
+				ObUser user = userService.findByToken(submitAnswerRequest.getToken());
+				Level cur = levelService.getLevelByUrl(url);
+				Level next = levelService.getLevelById(cur.getNextLevelId());
+				
+				if((user.getParentLevel() < next.getParentLevel()) || ((user.getParentLevel() == next.getParentLevel()) && (user.getLevel() < next.getLevel()))) {
+					userService.updateLevel(user, next.getParentLevel(), next.getLevel(), next.getUrl());
+				}
 			
+				return new LevelResponse(next);
+			}
 		}
 		
 		return ErrorConstants.WRONG_ANSWER;
@@ -199,7 +207,7 @@ public class UserController {
 		Map<String, String> params = new HashMap<String, String>();
 		params.put("access_token", token);
 		try {
-			String googleResponse = httpService.get("https://www.googleapis.com/plus/api/v1/people/me?", params);
+			String googleResponse = httpService.get("https://www.googleapis.com/plus/v1/people/me?", params);
 
 			JSONObject gResp = new JSONObject(googleResponse);
 			JSONArray array = gResp.getJSONArray("emails");

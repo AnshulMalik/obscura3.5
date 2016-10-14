@@ -32,6 +32,8 @@ public class ObUser {
 	
 	private Long parentLevel;
 
+	private String levelUrl;
+	
 	private String password;
 	
 	private String token;
@@ -50,13 +52,14 @@ public class ObUser {
 		
 	}
 
-	public ObUser(String firstName, String lastName, String email, String phone, Long level, Long parentLevel, String password, String token, String accessToken, String signupType, String uid) {
+	public ObUser(String firstName, String lastName, String email, String phone, Long level, Long parentLevel, String levelUrl, String password, String token, String accessToken, String signupType, String uid) {
 		this.firstName = firstName;
 		this.lastName = lastName;
 		this.email = email;
 		this.phone = phone;
 		this.level = level;
 		this.parentLevel = parentLevel;
+		this.levelUrl = levelUrl;
 		this.password = password;
 		this.token = token;
 		this.accessToken = accessToken;
@@ -71,6 +74,7 @@ public class ObUser {
 		this.phone = signupRequest.getPhone();
 		this.level = 0L;
 		this.parentLevel = 0L;
+		this.levelUrl = "0";
 		this.password = signupRequest.getPassword();
 		this.token = token;
 		this.accessToken = signupRequest.getAccessToken();
@@ -205,5 +209,13 @@ public class ObUser {
 
 	public void setParentLevel(Long parentLevel) {
 		this.parentLevel = parentLevel;
+	}
+
+	public String getLevelUrl() {
+		return levelUrl;
+	}
+
+	public void setLevelUrl(String levelUrl) {
+		this.levelUrl = levelUrl;
 	}
 }

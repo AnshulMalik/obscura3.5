@@ -19,7 +19,7 @@ public interface UserService {
 	
 	public Response signup(SocialLoginRequest socialLoginRequest);
 	
-	public boolean updateLevel(ObUser user, Long parentLevel, Long level);
+	public boolean updateLevel(ObUser user, Long parentLevel, Long level, String url);
 	
 	public BigInteger getRank(BigInteger id);
 }

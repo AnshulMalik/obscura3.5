@@ -3,10 +3,8 @@ package com.obscuraconflu.api.dto;
 public class SubmitAnswerRequest extends Response {
 	private String token;
 
-	private Long level;
-
-	private Long subLevel;
-
+	private String url;
+	
 	private String answer;
 
 	public String getToken() {
@@ -17,20 +15,12 @@ public class SubmitAnswerRequest extends Response {
 		this.token = token;
 	}
 
-	public Long getLevel() {
-		return level;
+	public String getUrl() {
+		return url;
 	}
 
-	public void setLevel(Long level) {
-		this.level = level;
-	}
-
-	public Long getSubLevel() {
-		return subLevel;
-	}
-
-	public void setSubLevel(Long subLevel) {
-		this.subLevel = subLevel;
+	public void setUrl(String url) {
+		this.url = url;
 	}
 
 	public String getAnswer() {

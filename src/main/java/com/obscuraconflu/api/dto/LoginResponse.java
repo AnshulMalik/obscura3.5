@@ -16,6 +16,8 @@ public class LoginResponse extends Response{
 	
 	private Long parentLevel;
 	
+	private String levelUrl;
+	
 	private String token;
 	
 	private Date updatedAt;
@@ -82,7 +84,16 @@ public class LoginResponse extends Response{
 		this.lastName = user.getLastName();
 		this.level = user.getLevel();
 		this.parentLevel = user.getParentLevel();
+		this.levelUrl = user.getLevelUrl();
 		this.token = user.getToken();
 		this.updatedAt = user.getUpdatedAt();
+	}
+
+	public String getLevelUrl() {
+		return levelUrl;
+	}
+
+	public void setLevelUrl(String levelUrl) {
+		this.levelUrl = levelUrl;
 	}
 }

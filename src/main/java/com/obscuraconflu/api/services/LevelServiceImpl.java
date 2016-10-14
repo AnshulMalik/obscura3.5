@@ -32,4 +32,15 @@ public class LevelServiceImpl implements LevelService {
 		return levelDao.findById(id);
 	}
 
+	@Override
+	public Level getLevelByUrl(String url) {
+		return levelDao.findByUrl(url);
+	}
+
+	@Override
+	public String getAnswerByUrl(String url) {
+		Level l = this.getLevelByUrl(url);
+		return this.getAnswer(l.getParentLevel(), l.getLevel());
+	}
+
 }

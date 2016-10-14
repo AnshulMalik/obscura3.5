@@ -53,6 +53,26 @@ public class LevelController {
 		return new LevelResponse(level);
 	}
 	
+	@RequestMapping(method = RequestMethod.GET, value = "/api/levelu/{url}", produces = "application/json")
+	public Response getLevel(@PathVariable("url") String url, @RequestHeader("authToken") String token) {
+		Level level;
+		LOG.info("Request to fetch level " + url + " token: " + token);
+		try {
+			ObUser user = userService.findByToken(token);
+			level = levelService.getLevelByUrl(url);
+			if(user == null || (user.getParentLevel() < level.getParentLevel())) {
+				return ErrorConstants.UNAUTHORIZED_USER;
+			}
+		}
+		catch(Exception e) {
+			e.printStackTrace();
+			return ErrorConstants.NOT_FOUND;
+		}
+		
+		return new LevelResponse(level);
+	}
+
+	
 	@RequestMapping(method = RequestMethod.GET, value = "/api/level/{plev}/{lev}", produces = "application/json")
 	public Response getLevel(@PathVariable("plev") String parentLev, @PathVariable("lev") String lev, @RequestHeader("authToken") String token) {
 		ObUser user = userService.findByToken(token);

@@ -5,10 +5,12 @@ import org.springframework.data.rest.core.annotation.RestResource;
 
 import com.obscuraconflu.api.models.Level;
 
-@RestResource(exported = true)
+@RestResource(exported = false)
 public interface LevelDao extends CrudRepository<Level, Long>{
 	
 	public Level findById(Long id);
 	
 	public Level findByParentLevelAndLevel(Long parentLevel, Long level);
+	
+	public Level findByUrl(String url);
 }

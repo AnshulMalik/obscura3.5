@@ -89,9 +89,10 @@ public class UserServiceImpl implements UserService {
 	}
 
 	@Override
-	public boolean updateLevel(ObUser user, Long parentLevel, Long level) {
+	public boolean updateLevel(ObUser user, Long parentLevel, Long level, String url) {
 		user.setParentLevel(parentLevel);
 		user.setLevel(level);
+		user.setLevelUrl(url);
 		try {
 			userDao.save(user);
 		} catch (Exception e) {
