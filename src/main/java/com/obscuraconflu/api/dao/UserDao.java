@@ -22,4 +22,8 @@ public interface UserDao extends CrudRepository<ObUser, Long> {
 	@Query(value = "CALL GetRank(:id)", nativeQuery = true)
 	public List<BigInteger> getRank(@Param("id") BigInteger id); 
 	
+	@Query(value = "SELECT * from user ORDER BY parent_level DESC, updated_at DESC", nativeQuery = true)
+	public List<ObUser> getAllUsers(); 
+	
+	
 }

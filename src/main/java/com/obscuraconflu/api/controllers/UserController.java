@@ -2,7 +2,9 @@ package com.obscuraconflu.api.controllers;
 
 import java.io.IOException;
 import java.math.BigInteger;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
@@ -21,6 +23,8 @@ import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 
+import com.obscuraconflu.api.dto.LeaderboardResponse;
+import com.obscuraconflu.api.dto.LeaderboardUser;
 import com.obscuraconflu.api.dto.LevelResponse;
 import com.obscuraconflu.api.dto.LoginRequestForm;
 import com.obscuraconflu.api.dto.LoginResponse;
@@ -145,14 +149,27 @@ public class UserController {
 		return userService.signup(signupRequest);
 	}
 	
-	@RequestMapping(method = RequestMethod.GET, value = "/api/test", produces = "application/json")
-	public Response test() {
-		Response res = new Response();
-//		ObUser user = userService.findByToken(testRequest.getToken());
-		BigInteger rank= userService.getRank(new BigInteger("12"));
-		LOG.info("rank is " + rank);
-		return res;	
+	@RequestMapping(method = RequestMethod.GET, value = "/api/leaderboard", produces = "application/json")
+	public LeaderboardResponse test() {
+		List<LeaderboardUser> leaderboard = new ArrayList<LeaderboardUser>();
+		List<ObUser> backendUsers = userService.getAllUsers();
+		Long i = 0L;
+		for(ObUser user: backendUsers) {
+			LeaderboardUser leaderBoardUser = new LeaderboardUser();
+			
+			leaderBoardUser.setLevel(user.getParentLevel());
+			if(user.getLastName() != null)
+				leaderBoardUser.setName(user.getFirstName() + " " + user.getLastName());
+			else
+				leaderBoardUser.setName(user.getFirstName());
+			leaderBoardUser.setRank(i);
+			i++;
+			leaderboard.add(leaderBoardUser);
+			
+		}
+		return new LeaderboardResponse(leaderboard);	
 	}
+	
 	
 	@RequestMapping(method = RequestMethod.POST, value = "/api/submitAnswer", produces = "application/json")
 	public Response submitAnswer(@RequestBody SubmitAnswerRequest submitAnswerRequest, HttpServletRequest request) {

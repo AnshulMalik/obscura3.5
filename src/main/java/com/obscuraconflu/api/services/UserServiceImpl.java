@@ -119,4 +119,9 @@ public class UserServiceImpl implements UserService {
 		return rank;
 	}
 
+	@Override
+	public List<ObUser> getAllUsers() {
+		return userDao.getAllUsers();
+	}
+
 }
