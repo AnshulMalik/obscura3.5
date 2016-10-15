@@ -37,16 +37,18 @@ public class LevelController {
 		ObUser user = userService.findByToken(token);
 		
 		if(user == null || (user.getParentLevel() < id)) {
+			
 			return ErrorConstants.UNAUTHORIZED_USER;
 		}
 		Level level;
 		try {
 			level = levelService.getLevel(id, id);
 			
-			LOG.info("Request from " + user.getFirstName() + " to access level " + level.getLevel());
+			LOG.info(user.getFirstName() + " accessed " + level.getUrl() + " level");
 		}
 		catch(Exception e) {
 			e.printStackTrace();
+			LOG.warn("Something went wrong while fetching level " + id);
 			return ErrorConstants.NOT_FOUND;
 		}
 		
@@ -56,19 +58,23 @@ public class LevelController {
 	@RequestMapping(method = RequestMethod.GET, value = "/api/levelu/{url}", produces = "application/json")
 	public Response getLevel(@PathVariable("url") String url, @RequestHeader("authToken") String token) {
 		Level level;
-		LOG.info("Request to fetch level " + url + " token: " + token);
 		try {
 			ObUser user = userService.findByToken(token);
 			level = levelService.getLevelByUrl(url);
 			if(user == null || (user.getParentLevel() < level.getParentLevel())) {
+				if(user != null)
+					LOG.info(user.getFirstName() + " tried to access unauthorized level " + url);
+				
 				return ErrorConstants.UNAUTHORIZED_USER;
 			}
+			LOG.info(user.getFirstName() + " accessed " + level.getUrl() + " level");
 		}
 		catch(Exception e) {
 			e.printStackTrace();
+			LOG.warn("Something went wrong while fetching level " + url);
 			return ErrorConstants.NOT_FOUND;
 		}
-		
+
 		return new LevelResponse(level);
 	}
 

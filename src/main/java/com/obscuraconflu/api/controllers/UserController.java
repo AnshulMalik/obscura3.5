@@ -73,7 +73,8 @@ public class UserController {
 		}
 		ObUser user = userService.findByEmail(loginRequestForm.getEmail());
 		if (user == null || !user.getPassword().equals(loginRequestForm.getPassword())) {
-			LOG.warn(user.getFirstName() + " invalid password attempt.");
+			if(user != null)
+				LOG.warn(user.getFirstName() + " invalid password attempt to " + user.getEmail());
 			return ErrorConstants.INVALID_EMAIL_OR_PASSWORD;
 		} 
 		else if(!user.getSignupType().equals("FORM")) {
@@ -81,7 +82,7 @@ public class UserController {
 			return ErrorConstants.LOGIN_WITH_SOCIAL_ACCOUNT;
 		}
 		else {
-
+			LOG.info(user.getFirstName() + " " + user.getLastName() + " logged in.");
 			return new LoginResponse(user);
 		}
 	}
@@ -95,8 +96,10 @@ public class UserController {
 				socialLoginRequest.getEmail().length() == 0 ||
 				socialLoginRequest.getUid().length() == 0 ||
 				socialLoginRequest.getName().length() == 0 ||
-				socialLoginRequest.getType() > 1) 
+				socialLoginRequest.getType() > 1) {
+			LOG.warn("Invalid social login request");
 			return ErrorConstants.INVALID_REQUEST;
+		}
 		
 		int type = socialLoginRequest.getType();
 		String newEmail = "";
@@ -156,6 +159,7 @@ public class UserController {
 		List<LeaderboardUser> leaderboard = new ArrayList<LeaderboardUser>();
 		List<ObUser> backendUsers = userService.getAllUsers();
 		Long i = 0L;
+		LOG.info("Leaderboard is requested");
 		for(ObUser user: backendUsers) {
 			LeaderboardUser leaderBoardUser = new LeaderboardUser();
 			
@@ -178,7 +182,6 @@ public class UserController {
 		if(submitAnswerRequest == null) {
 			return ErrorConstants.INVALID_REQUEST;
 		}
-		LOG.info("Answer submit request from " + submitAnswerRequest.getToken() + " " + submitAnswerRequest.getUrl());
 		
 		String url = submitAnswerRequest.getUrl();
 		String answer = levelService.getAnswerByUrl(url);
@@ -188,7 +191,6 @@ public class UserController {
 //		template.convertAndSend("/topic/greetings", answer);
 		int flag = 0;
 		
-		LOG.info("Request ip: " + request.getRemoteAddr() + " forwarded for: " + request.getHeader("X-Forwarded-For") + " answer: " + submitAnswerRequest.getAnswer());
 		if(url.equals("6")) {
 			if(submitAnswerRequest.getAnswer().equals(request.getHeader("X-Forwarded-For")) || submitAnswerRequest.getAnswer().equals(request.getRemoteAddr())) {
 				ObUser user = userService.findByToken(submitAnswerRequest.getToken());
@@ -203,20 +205,29 @@ public class UserController {
 			}
 			
 		}
-		for(String answerFromArray: answers) {
-			if(answerFromArray.equals(submitAnswerRequest.getAnswer())) {
-				ObUser user = userService.findByToken(submitAnswerRequest.getToken());
-				Level cur = levelService.getLevelByUrl(url);
-				Level next = levelService.getLevelById(cur.getNextLevelId());
-				Timestamp currentTimestamp = new java.sql.Timestamp(Calendar.getInstance().getTime().getTime());
-				if((user.getParentLevel() < next.getParentLevel()) || ((user.getParentLevel() == next.getParentLevel()) && (user.getLevel() < next.getLevel()))) {
-					userService.updateLevel(user, next.getParentLevel(), next.getLevel(), next.getUrl(), currentTimestamp);
-				}
-			
-				return new LevelResponse(next);
-			}
-		}
 		
+		ObUser user = userService.findByToken(submitAnswerRequest.getToken());
+		Level cur = levelService.getLevelByUrl(url);
+		Level next = levelService.getLevelById(cur.getNextLevelId());
+		Timestamp currentTimestamp = new java.sql.Timestamp(Calendar.getInstance().getTime().getTime());
+		
+		if(user != null) {
+			LOG.info(user.getFirstName() + " " + user.getLastName() + " tried " + submitAnswerRequest.getAnswer() + " on " + cur.getUrl());
+			for(String answerFromArray: answers) {
+				if(answerFromArray.equals(submitAnswerRequest.getAnswer())) {		
+					if(cur.getParentLevel() > user.getParentLevel()) {
+						LOG.warn("Unauthorized submit from " + user.getFirstName() + " at  " + cur.getParentLevel());
+						return ErrorConstants.UNAUTHORIZED_USER;
+					}
+					
+					if((user.getParentLevel() < next.getParentLevel()) || ((user.getParentLevel() == next.getParentLevel()) && (user.getLevel() < next.getLevel()))) {
+						userService.updateLevel(user, next.getParentLevel(), next.getLevel(), next.getUrl(), currentTimestamp);
+					}
+				
+					return new LevelResponse(next);
+				}
+			}
+		}		
 		return ErrorConstants.WRONG_ANSWER;
 		
 	}
