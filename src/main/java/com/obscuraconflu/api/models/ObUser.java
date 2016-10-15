@@ -52,7 +52,7 @@ public class ObUser {
 		
 	}
 
-	public ObUser(String firstName, String lastName, String email, String phone, Long level, Long parentLevel, String levelUrl, String password, String token, String accessToken, String signupType, String uid) {
+	public ObUser(String firstName, String lastName, String email, String phone, Long level, Long parentLevel, String levelUrl, String password, String token, String accessToken, String signupType, String uid, Date createdAt, Date updatedAt) {
 		this.firstName = firstName;
 		this.lastName = lastName;
 		this.email = email;
@@ -64,6 +64,8 @@ public class ObUser {
 		this.token = token;
 		this.accessToken = accessToken;
 		this.signupType = signupType;
+		this.createdAt = createdAt;
+		this.updatedAt = updatedAt;
 		this.uid = uid;
 	}
 	

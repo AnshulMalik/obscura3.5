@@ -2,7 +2,9 @@ package com.obscuraconflu.api.controllers;
 
 import java.io.IOException;
 import java.math.BigInteger;
+import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -192,9 +194,9 @@ public class UserController {
 				ObUser user = userService.findByToken(submitAnswerRequest.getToken());
 				Level cur = levelService.getLevelByUrl(url);
 				Level next = levelService.getLevelById(cur.getNextLevelId());
-				
+				Timestamp currentTimestamp = new java.sql.Timestamp(Calendar.getInstance().getTime().getTime());
 				if((user.getParentLevel() < next.getParentLevel()) || ((user.getParentLevel() == next.getParentLevel()) && (user.getLevel() < next.getLevel()))) {
-					userService.updateLevel(user, next.getParentLevel(), next.getLevel(), next.getUrl());
+					userService.updateLevel(user, next.getParentLevel(), next.getLevel(), next.getUrl(), currentTimestamp);
 				}
 			
 				return new LevelResponse(next);
@@ -206,9 +208,9 @@ public class UserController {
 				ObUser user = userService.findByToken(submitAnswerRequest.getToken());
 				Level cur = levelService.getLevelByUrl(url);
 				Level next = levelService.getLevelById(cur.getNextLevelId());
-				
+				Timestamp currentTimestamp = new java.sql.Timestamp(Calendar.getInstance().getTime().getTime());
 				if((user.getParentLevel() < next.getParentLevel()) || ((user.getParentLevel() == next.getParentLevel()) && (user.getLevel() < next.getLevel()))) {
-					userService.updateLevel(user, next.getParentLevel(), next.getLevel(), next.getUrl());
+					userService.updateLevel(user, next.getParentLevel(), next.getLevel(), next.getUrl(), currentTimestamp);
 				}
 			
 				return new LevelResponse(next);

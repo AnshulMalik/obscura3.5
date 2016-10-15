@@ -1,6 +1,7 @@
 package com.obscuraconflu.api.services;
 
 import java.math.BigInteger;
+import java.sql.Timestamp;
 import java.util.Calendar;
 import java.util.List;
 import java.util.UUID;
@@ -88,10 +89,12 @@ public class UserServiceImpl implements UserService {
 	}
 
 	@Override
-	public boolean updateLevel(ObUser user, Long parentLevel, Long level, String url) {
+	public boolean updateLevel(ObUser user, Long parentLevel, Long level, String url, Timestamp currentTime) {
 		user.setParentLevel(parentLevel);
 		user.setLevel(level);
 		user.setLevelUrl(url);
+		user.setUpdatedAt(currentTime);
+	
 		try {
 			userDao.save(user);
 		} catch (Exception e) {
